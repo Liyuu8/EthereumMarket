@@ -146,4 +146,62 @@ contract.methods.numItems().call()
   }
 
   // 取引の状態を表示する
+  function showState(idx) {
+    stateKeyList = ["支払い", "発送", "受取", "出品者評価", "購入者評価"];
+    stateIdxList = [6, 7, 8, 9, 10];
+
+    contract.methods.items(idx).call().then(function(item) {
+      for(var i = 0; i < stateIdxList.length; i++) {
+        var elem = document.createElement("p");
+        if(item[stateIdxList[i]]) {
+          elem.textContent = stateKeyList[i] + " : 済み";
+        } else {
+          elem.textContent = stateKeyList[i] + " : 完了していません";
+        }
+        document.getElementById("state" + idx).appendChild(elem);
+      }
+    });
+  }
+
+  // 取引を進めるボタンに関数を登録する
+  function setButton(idx) {
+    var price;
+    contract.methods.items(idx).call().then(function(item) {
+      price = item[5]; // 商品価格を取得する
+    }).then(function() {
+      document.getElementById("buy" + idx).setAttribute("onclick", "buy(" + idx + "," + price + ");");
+      document.getElementById("ship" + idx).setAttribute("onclick", "ship(" + idx + ");");
+      document.getElementById("receive" + idx).setAttribute("onclick", "receive(" + idx + ");");
+      document.getElementById("sellerEvaluate" + idx).setAttribute("onclick", "sellerEvaluate(" + idx + ");");
+      document.getElementById("buyerEvaluate" + idx).setAttribute("onclick", "buyerEvaluate(" + idx + ");");
+    });
+  }
+
+  // 購入する関数
+  function buy(idx, price) {
+    return contract.methods.buy(idx).send({ from: coinbase, value: price });
+  }
+
+  // 受取連絡する関数
+  function receive(idx) {
+    return contract.methods.receive(idx).send({ from: coinbase });
+  }
+
+  // 発送連絡する関数
+  function ship(idx) {
+    return contract.methods.ship(idx).send({ from: coinbase });
+  }
+
+  // 購入者を評価する関数
+  function buyerEvaluate(idx) {
+    var buyerValue = document.getElementById("value" + idx).value;
+    return contract.methods.buyerEvaluate(idx, buyerValue).send({ from: coinbase });
+  }
+
+  // 出品者を評価する関数
+  function sellerEvaluate(idx) {
+    var sellerValue = document.getElementById("value" + idx).value;
+    return contract.methods.sellerEvaluate(idx, sellerValue).send({ from: coinbase });
+  }
+
   
